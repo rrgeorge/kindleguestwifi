@@ -81,6 +81,11 @@ then
 		eips -x 0 -y 39 "Battery Full"
 	fi
 	sleep 1
+	if [ ${FIRSTSTART} -eq 1 ]
+	then
+		#wait a minute before sleeping the first time 
+		sleep 60
+	fi
 	rtcwake -d ${RTCDEV} -m mem -s ${SUSPENDFOR}
  else
  	echo "Was asleep only ${PIDMTIME} seconds, sleeping for 5 minutes."
