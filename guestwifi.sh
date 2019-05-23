@@ -3,6 +3,7 @@ FIRSTSTART=1
 SUSPENDFOR=14400
 DOWNLOADURL="http://example.com/wifi.png"
 RTCDEV=rtc1
+SHOWBATT=1
 
 wait_wlan() {
 	return `lipc-get-prop com.lab126.wifid cmState | grep CONNECTED | wc -l`
@@ -17,7 +18,7 @@ echo "Disabling Screensaver"
 lipc-set-prop com.lab126.powerd preventScreenSaver 1
 if [ ${FIRSTSTART} -eq 1 ]
 then
-	#wait a minute before sleeping the first time
+	#wait a minute before sleeping the first time 
 	echo "First run, waiting a minute..."
 	sleep 60
 else
@@ -76,21 +77,29 @@ PIDMTIME=$(( `date +%s` - `stat -c '%Y' /var/run/guestwifi.pid` ))
 if [ ${FIRSTSTART} -eq 1 ] || [ ${PIDMTIME} -gt ${SUSPENDFOR} ]
 then
 	FIRSTSTART=0
+
 	touch /var/run/guestwifi.pid
 
 	eips -f -g /mnt/base-us/screensaver/bg_xsmall_ss00.png
 
-	if [ `gasgauge-info -c|sed -e 's/%//'` -lt 10 ]
+	BATTLEVEL=$(gasgauge-info -c|sed -e 's/%//')
+
+	if [ ${BATTLEVEL} -lt 10 ]
 	then
 		eips -x 0 -y 39 "Low Battery"
-	elif [ `gasgauge-info -c|sed -e 's/%//'` -eq 100 ]
+	elif [ ${BATTLEVEL} -eq 100 ]
 	then
 		eips -x 0 -y 39 "Battery Full"
+	fi
+	if [ ${SHOWBATT} -eq 1 ]
+	then
+		eips -x 0 -y 39 "$(printf '%50.50s' ${BATTLEVEL})"
 	fi
 	sleep 1
 	rtcwake -d ${RTCDEV} -m mem -s ${SUSPENDFOR}
  else
  	echo "Was asleep only ${PIDMTIME} seconds, sleeping for 5 minutes."
+
 	sleep 300
 fi
 
