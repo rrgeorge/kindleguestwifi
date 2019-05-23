@@ -15,10 +15,17 @@ echo "Setting CPU to powersave"
 echo powersave > /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor
 echo "Disabling Screensaver"
 lipc-set-prop com.lab126.powerd preventScreenSaver 1
-eips -f -g /mnt/base-us/screensaver/bg_xsmall_ss00.png
+if [ ${FIRSTSTART} -eq 1 ]
+then
+	#wait a minute before sleeping the first time
+	echo "First run, waiting a minute..."
+	sleep 60
+else
+	eips -f -g /mnt/base-us/screensaver/bg_xsmall_ss00.png
+fi
 while true; do
 
-if [ $(( `date +%s` - `stat -c '%Y' /mnt/us/screensaver/bg_xsmall_ss00.png` )) -lt 3600 ]
+if [ -e /mnt/us/screensaver/bg_xsmall_ss00.png ] && [ $(( `date +%s` - `stat -c '%Y' /mnt/us/screensaver/bg_xsmall_ss00.png` )) -lt 3600 ]
 then
 	echo "Settings have been updated recently, doing nothing."
 else
@@ -81,11 +88,6 @@ then
 		eips -x 0 -y 39 "Battery Full"
 	fi
 	sleep 1
-	if [ ${FIRSTSTART} -eq 1 ]
-	then
-		#wait a minute before sleeping the first time 
-		sleep 60
-	fi
 	rtcwake -d ${RTCDEV} -m mem -s ${SUSPENDFOR}
  else
  	echo "Was asleep only ${PIDMTIME} seconds, sleeping for 5 minutes."
